@@ -42,12 +42,10 @@ service sfdcContactListener on sfdcEventListener {
         json|error contact = sr.readJson();
         if (contact is json) {
             log:printInfo(contact.toJsonString());
-            //Create sobject client
-            sfdc:SObjectClient sobjectClient = baseClient->getSobjectClient();
             //Get the contact id from the contact
             string contactId = contact.sobject.Id.toString();
             log:printInfo("Contact ID : " + contactId);
-            json|sfdc:Error contactInfo = sobjectClient->getContactById(contactId);
+            json|sfdc:Error contactInfo = baseClient->getContactById(contactId);
             if (contactInfo is json) {
                 // Log contact information. 
                 log:printInfo(contactInfo);
