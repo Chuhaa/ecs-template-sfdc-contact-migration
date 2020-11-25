@@ -3,7 +3,7 @@
 
 ## Integration Use Case 
 
-This integration template listens to the updated on Salesforce Contacts and publishes the updated contacts to a database.     
+This integration template helps to migrate Salesforce Contacts to a Database. Initially all the existing contacts will be migrated using a batch job. After that a lisstner listens to the updates on Salesforce Contacts and publishes the updated contacts to the database.     
 
 ![image](docs/images/sfdc-db-cont-mig.png)
 
@@ -94,7 +94,9 @@ DB_PWD=""
 2. Then you can run the integration binary with the following command. 
 `$ java -jar target/bin/sfdccontmigration.jar`. 
 
-Successful listener startup will print following in the console.
+Initially all the existing contacts will be migrated to database.
+
+After that successful listener startup will print following in the console.
 ```
 >>>>
 [2020-11-18 23:39:12.808] Success:[/meta/handshake]

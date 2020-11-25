@@ -30,7 +30,6 @@ mysql:Client mysqlClient =  check new (user = config:getAsString("DB_USER"),
                                         password = config:getAsString("DB_PWD"));
 
 public function main(){
-    log:printInfo("Hello World!");
     string queryStr = "SELECT Id FROM Contact";
     //create bulk job
     error|sfdc:BulkJob queryJob = baseClient->creatJob("query", "Contact", "JSON");
@@ -110,7 +109,7 @@ function addContactToDB(json contact) {
     string department = contact.Department.toString();
     
     log:printInfo(id + ":" + accountId + ":" + name + ":" + title);
-    // The SQL query to insert an contact record to the DB. 
+    // The SQL query to insert a contact record to the DB. 
     sql:ParameterizedQuery insertQuery =
             `INSERT INTO ESC_SFDC_TO_DB.Contact (Id, Salutation, Name, Mobile, Email, Phone, Fax, AccountId, Title, Department) 
             VALUES (${id}, ${salutation}, ${name}, ${mobilePhone}, ${email}, ${phone}, ${fax}, ${accountId}, ${title}, ${department})`;
@@ -121,7 +120,7 @@ function addContactToDB(json contact) {
         if result is sql:DatabaseError{
             sql:DatabaseErrorDetail errorDetails = result.detail();
             if(1062==errorDetails.errorCode){
-                // The SQL query to update an contact record to the DB. 
+                // The SQL query to update a contact record to the DB. 
                 sql:ParameterizedQuery updateQuery =
                 `UPDATE ESC_SFDC_TO_DB.Contact SET Salutation=${salutation}, Name=${name}, Mobile=${mobilePhone}, Email=${email}, Phone=${phone}, Fax=${fax}, AccountId=${accountId}, Title=${title}, Department=${department} WHERE Id=${id}`;
                 sql:ExecutionResult|sql:Error? updateResult  = mysqlClient->execute(updateQuery);
