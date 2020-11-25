@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS ESC_SFDC_TO_DB.Contact(
   Fax VARCHAR(30),
   AccountId VARCHAR(300),
   Title VARCHAR(300),
-  Department VARCHAR(300)
+  Department VARCHAR(300),
+  PRIMARY KEY (`Id`)
 );
