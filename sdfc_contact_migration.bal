@@ -46,7 +46,7 @@ public function main(){
                 if (batchResultArr is json[]) {
                     foreach var result in batchResultArr {
                         string contactId = result.Id.toString();
-                        log:printInfo("Contact ID : " + contactId); 
+                        log:print("Contact ID : " + contactId); 
                         migrateContact(contactId);
                     }
                 } else {
@@ -71,16 +71,16 @@ public function main(){
     topic:config:getAsString("SF_CONTACT_TOPIC")
 }
 
-service sfdcContactListener on sfdcEventListener {
-    resource function onEvent(json cont) {  
+service on sfdcEventListener {
+    remote function onEvent(json cont) {  
         //convert json string to json
         io:StringReader sr = new(cont.toJsonString());
         json|error contact = sr.readJson();
         if (contact is json) {
-            log:printInfo(contact.toJsonString());
+            log:print(contact.toJsonString());
             //Get the contact id from the contact
             string contactId = contact.sobject.Id.toString();
-            log:printInfo("Contact ID : " + contactId);
+            log:print("Contact ID : " + contactId);
             migrateContact(contactId);
         }
     }
@@ -89,8 +89,6 @@ service sfdcContactListener on sfdcEventListener {
 function migrateContact(string contactId) {
     json|sfdc:Error contactInfo = baseClient->getContactById(contactId);
     if (contactInfo is json) {
-        // Log contact information. 
-        log:printInfo(contactInfo);
         // Add the current contact to a DB. 
         addContactToDB(<@untainted>contactInfo);
     }
@@ -108,7 +106,7 @@ function addContactToDB(json contact) {
     string title = contact.Title.toString();
     string department = contact.Department.toString();
     
-    log:printInfo(id + ":" + accountId + ":" + name + ":" + title);
+    log:print(id + ":" + accountId + ":" + name + ":" + title);
     // The SQL query to insert a contact record to the DB. 
     sql:ParameterizedQuery insertQuery =
             `INSERT INTO ESC_SFDC_TO_DB.Contact (Id, Salutation, Name, Mobile, Email, Phone, Fax, AccountId, Title, Department) 
