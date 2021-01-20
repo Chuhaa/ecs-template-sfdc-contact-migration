@@ -1,7 +1,7 @@
 import ballerina/io;
 import ballerina/config;
 import ballerinax/mysql;
-import ballerina/'log;
+import ballerina/log;
 import ballerina/sql;
 import ballerinax/sfdc;
 
@@ -31,15 +31,11 @@ mysql:Client mysqlClient =  check new (user = config:getAsString("DB_USER"),
 
 public function main(){
     string queryStr = "SELECT Id FROM Contact";
-    //create bulk job
     error|sfdc:BulkJob queryJob = baseClient->creatJob("query", "Contact", "JSON");
     if (queryJob is sfdc:BulkJob) {
-        //create batch
         error|sfdc:BatchInfo batch = queryJob->addBatch(queryStr);
         if (batch is sfdc:BatchInfo) {
-            io:println(batch);
             string batchId = batch.id;
-            //get batch result
             var batchResult = queryJob->getBatchResult(batchId);
             if (batchResult is json) {
                 json[]|error batchResultArr = <json[]>batchResult;
@@ -70,15 +66,12 @@ public function main(){
 @sfdc:ServiceConfig {
     topic:config:getAsString("SF_CONTACT_TOPIC")
 }
-
 service on sfdcEventListener {
     remote function onEvent(json cont) {  
-        //convert json string to json
         io:StringReader sr = new(cont.toJsonString());
         json|error contact = sr.readJson();
         if (contact is json) {
             log:print(contact.toJsonString());
-            //Get the contact id from the contact
             string contactId = contact.sobject.Id.toString();
             log:print("Contact ID : " + contactId);
             migrateContact(contactId);
@@ -89,7 +82,6 @@ service on sfdcEventListener {
 function migrateContact(string contactId) {
     json|sfdc:Error contactInfo = baseClient->getContactById(contactId);
     if (contactInfo is json) {
-        // Add the current contact to a DB. 
         addContactToDB(<@untainted>contactInfo);
     }
 }
@@ -107,33 +99,10 @@ function addContactToDB(json contact) {
     string department = contact.Department.toString();
     
     log:print(id + ":" + accountId + ":" + name + ":" + title);
-    // The SQL query to insert a contact record to the DB. 
     sql:ParameterizedQuery insertQuery =
-            `INSERT INTO ESC_SFDC_TO_DB.Contact (Id, Salutation, Name, Mobile, Email, Phone, Fax, AccountId, Title, Department) 
-            VALUES (${id}, ${salutation}, ${name}, ${mobilePhone}, ${email}, ${phone}, ${fax}, ${accountId}, ${title}, ${department})`;
-    // Invoking the MySQL Client to execute the insert operation. 
+        `INSERT INTO ESC_SFDC_TO_DB.Contact (Id, Salutation, Name, Mobile, Email, Phone, Fax, AccountId, Title, Department) 
+        VALUES (${id}, ${salutation}, ${name}, ${mobilePhone}, ${email}, ${phone}, ${fax}, ${accountId}, ${title}, ${department})
+        ON DUPLICATE KEY UPDATE Name = ${name}, Mobile = ${mobilePhone}, Email = ${email}, Phone = ${phone}, Fax =  ${fax},
+        AccountId = ${accountId}, Title =  ${title}, Department = ${department}`;
     sql:ExecutionResult|sql:Error? result  = mysqlClient->execute(insertQuery);
-    if result is sql:Error{
-        //if the entry exists in db 
-        if result is sql:DatabaseError{
-            sql:DatabaseErrorDetail errorDetails = result.detail();
-            if(1062==errorDetails.errorCode){
-                // The SQL query to update a contact record to the DB. 
-                sql:ParameterizedQuery updateQuery =
-                `UPDATE ESC_SFDC_TO_DB.Contact SET Salutation=${salutation}, Name=${name}, Mobile=${mobilePhone}, Email=${email}, Phone=${phone}, Fax=${fax}, AccountId=${accountId}, Title=${title}, Department=${department} WHERE Id=${id}`;
-                sql:ExecutionResult|sql:Error? updateResult  = mysqlClient->execute(updateQuery);
-                if updateResult is sql:Error{
-                    log:printError(updateResult.message());
-                }
-            }
-            else{
-                log:printError(result.message());
-            }
-        }
-        else{
-            log:printError(result.message());
-        }
-        
-    }
-    
 }

@@ -92,7 +92,7 @@ DB_PWD=""
 `$ ballerina build`. 
 
 2. Then you can run the integration binary with the following command. 
-`$ ballerina ./target/bin/ecs_template_sfdc_contact_migration_to_db.jar`. 
+`$ ballerina run ./target/bin/ecs_template_sfdc_contact_migration_to_db.jar`. 
 
 Initially all the existing contacts will be migrated to database.
 
